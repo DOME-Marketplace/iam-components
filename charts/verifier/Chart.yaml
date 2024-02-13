@@ -1,10 +1,12 @@
 apiVersion: v2
-name: vcwaltid
-description: walt-id chart
+name: vcverifier
+description: vcverifier chart
+
 type: application
 version: 0.0.1
-appVersion: "0.0.18"
+appVersion: "1.0.23"
+
 dependencies:
-  - name: vcwaltid
-    version: 0.0.18
+  - name: vcverifier
+    version: 1.0.23
     repository: https://i4Trust.github.io/helm-charts

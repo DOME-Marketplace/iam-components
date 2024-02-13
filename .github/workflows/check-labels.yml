@@ -38,7 +38,7 @@ jobs:
             echo "$file was changed"
             baseFolder=$(cut -d'/' -f1 <<< "$file")
             chartName=$(cut -d'/' -f2 <<< "$file")
-            if [ $baseFolder = "charts" ]; then
+            if [ $baseFolder = "charts" ] && [ $chartName = "iam-components" ]; then
               echo "changed=true" >> "$GITHUB_OUTPUT"
               break;
             fi  
