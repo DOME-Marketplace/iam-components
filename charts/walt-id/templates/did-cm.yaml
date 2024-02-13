@@ -1,0 +1,36 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "waltid.fullname" . }}-did-cm
+  labels:
+    {{ include "waltid.labels" . | nindent 4 }}
+data:
+  did.json: |-
+    {
+      "assertionMethod": [
+        "{{ .Values.did }}#{{ .Values.jwkKid }}"
+      ],
+      "authentication": [
+        "{{ .Values.did }}#{{ .Values.jwkKid }}"
+      ],
+      "@context": [
+          "https://www.w3.org/ns/did/v1"
+      ],
+      "id": "{{ .Values.did }}",
+      "verificationMethod": [
+          {
+              "controller": "{{ .Values.did }}",
+              "id": "{{ .Values.did }}#{{ .Values.jwkKid }}",
+              "publicKeyJwk": {
+                  "alg": "RS256",
+                  "e": "AQAB",
+                  "kid": "{{ .Values.jwkKid }}",
+                  "kty": "RSA",
+                  "n": "lzs0FPiK9aeDcb-e9f5mrm4YVKWdXD-4yrCVg7rV_5-G_K-P7L-kQ8KqbyL0czZ8PzM_9yyg-CVwnNy0ZUb51JlOpY8nqyq1vN8MBwtvruuGja5zgLmNXOY34BYHj3Ay60uWZaG2zstXQtuwMI0gpoqG490JEzczT35sJ5E7rJNajo0NNSFYKoq9MVqX2AJAZ9E83HLRva6ksgwe1Dx0-0LuDWORu_OSuQYqqfuIKmxeR3vl8UyHsqhqRMGj9HF8gi0Hn7mmbpYlInkje0vZhNGGIZ6nw0g1WrVxHfSP3X6i-THd9uE4yoKNZ4h0xxNN-dNfOtHHkCZ3A9HYiVKATw",
+                  "use": "sig",
+                  "x5u": "https://{{ .Values.route.host }}/certs/tls.crt"
+              },
+              "type": "JsonWebKey2020"
+          }
+      ]
+    }
