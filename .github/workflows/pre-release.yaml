@@ -1,0 +1,178 @@
+name: Pre-Release
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+      - unlabeled
+
+jobs:
+
+    it:
+      runs-on: ubuntu-latest
+
+      steps:
+        - uses: actions/checkout@v2
+
+        - uses: actions/setup-java@v1
+          with:
+            java-version: '17'
+            java-package: jdk
+
+        - uses: azure/setup-helm@v3
+
+        - name: Execute tests
+          id: test
+          run: |
+            cd it
+            mvn clean test integration-test
+
+    check-changes: 
+
+      needs: ["it" ]
+      runs-on: ubuntu-latest
+
+      outputs:
+        changed: ${{ steps.changes.outputs.changed }}
+
+      steps:
+
+        - uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+
+        - name: Get changed files
+          id: changed-files
+          uses: tj-actions/changed-files@v14.6
+
+        - name: Check changes
+          id: changes
+          shell: bash
+          run: |
+
+            for file in ${{ steps.changed-files.outputs.all_changed_and_modified_files }}; do         
+
+              echo "$file was changed"
+              baseFolder=$(cut -d'/' -f1 <<< "$file")
+              chartName=$(cut -d'/' -f2 <<< "$file")
+              if [ $baseFolder = "charts" ]; then
+                echo "changed=true" >> "$GITHUB_OUTPUT"
+                break;
+              fi  
+            done    
+
+    generate-version:
+      needs: ["check-changes" ]
+      if: ${{ needs.check-changes.outputs.changed }}
+      runs-on: ubuntu-latest
+
+      outputs:
+        version: ${{ steps.out.outputs.version }}
+
+      steps:
+        - uses: actions/checkout@v2
+
+        - id: bump
+          uses: zwaldowski/match-label-action@v1
+          with:
+            allowed: major,minor,patch
+
+        - uses: zwaldowski/semver-release-action@v2
+          with:
+            dry_run: true
+            bump: ${{ steps.bump.outputs.match }}
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: Get PR Number
+          id: pr_number
+          run: echo "::set-output name=nr::$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')"
+          
+        - name: Set version output
+          id: out
+          run: echo "::set-output name=version::$(echo ${VERSION}-PRE-${{ steps.pr_number.outputs.nr }})"
+
+    deploy:
+
+      needs: ["check-changes", "generate-version" ]
+      runs-on: ubuntu-latest
+      if: ${{ needs.check-changes.outputs.changed }}
+
+      steps:
+
+        - uses: actions/checkout@v2
+
+        - name: Fetch history
+          run: git fetch --prune --unshallow
+
+        - name: Configure Git
+          run: |
+            git config user.name "$GITHUB_ACTOR"
+            git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+        - name: Install Helm
+          run: |
+            curl -fsSLo get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+            chmod 700 get_helm.sh
+            ./get_helm.sh
+
+        # prepare yaml parser
+        - uses: actions/setup-go@v4
+        - name: Install yq
+          run: |
+            go install github.com/mikefarah/yq/v4@latest
+            yq --version
+
+        - name: Set the version
+          run: |
+              yq e -i '.version = "${{ needs.generate-version.outputs.version }}"' ./charts/walt-id/Chart.yaml
+
+        - name: generate docs
+          run:
+            docker run --rm --volume "$(pwd):/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
+
+        - name: Commit files
+          continue-on-error: true
+          run: |
+            git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git status
+
+            git commit -m "Update helm documentation" -a
+
+            echo status update
+            git status
+
+        - name: Push changes
+          continue-on-error: true
+          uses: ad-m/github-push-action@master
+          with:
+            branch: ${{ github.head_ref }}
+
+        - name: Run chart-releaser
+          uses: helm/chart-releaser-action@main
+          env:
+            CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+            CR_SKIP_EXISTING: true
+          with:
+            skip_upload: true
+
+
+        - name: Create index.yaml
+          run: |
+            owner=$(cut -d '/' -f 1 <<< "$GITHUB_REPOSITORY")
+            repo=$(cut -d '/' -f 2 <<< "$GITHUB_REPOSITORY")
+
+            git switch gh-pages
+            
+            cr index -o "$owner" -r "$repo"
+
+            mv .cr-index/index.yaml pre/index.yaml
+
+            git add pre/index.yaml
+            git commit -m "add pre-index"
+            git push --set-upstream origin gh-pages
+
+        
