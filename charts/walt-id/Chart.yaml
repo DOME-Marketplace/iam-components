@@ -1,11 +1,9 @@
 apiVersion: v2
 name: vcwaltid
 description: walt-id chart
-
 type: application
-version: 0.0.1
+version: 0.0.1-PRE-1
 appVersion: "0.0.18"
-
 dependencies:
   - name: vcwaltid
     version: 0.0.18
