@@ -1,0 +1,52 @@
+dsba-pdp:
+
+  # DB
+  db: 
+    enabled: false
+    migrate:
+      enabled: false
+
+  deployment:
+    # Image
+    image:  
+      pullPolicy: Always
+      repository: quay.io/fiware/dsba-pdp
+      # includes the http policy support
+      tag: 1.2.0
+
+    # Log level
+    logLevel: TRACE
+
+    # iSHARE config
+    ishare:
+      existingSecret: waltid-vcwaltid-tls-sec
+
+      clientId: did:web:dome-iam.fiware.dev:did
+      trustedFingerprints:
+        - MYFINGERPRINT
+
+      ar:
+        id: "did:web:dome-iam.fiware.dev:did"
+        delegationPath: "/ar/delegation"
+        tokenPath: "/oauth2/token"
+        url: "https://ar.dome-iam.fiware.dev"
+
+      trustAnchor:
+        id: "EU.EORI.FIWARESATELLITE"
+        tokenPath: "/token"
+        trustedListPath: "/trusted_list"
+        url: "https://tir.dome-iam.fiware.dev"
+
+    # Verifier
+    trustedVerifiers:
+      - https://verifier.dome-iam.fiware.dev/.well-known/jwks
+
+    # Provider DID
+    providerId: "did:web:dome-iam.fiware.dev:did"
+
+  # ENVs
+  additionalEnvVars:
+    - name: ISHARE_CERTIFICATE_PATH
+      value: /iShare/tls.crt
+    - name: ISHARE_KEY_PATH
+      value: /iShare/tls.key

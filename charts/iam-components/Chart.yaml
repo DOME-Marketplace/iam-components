@@ -1,0 +1,13 @@
+apiVersion: v2
+name: iam-components
+description: Umbrella Chart for the DOME Marketplace iam-components
+type: application
+version: 0.0.1
+appVersion: 0.0.1
+dependencies:
+  - name: postgresql
+    version: 12.1.13
+    repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+  - name: mysql
+    version: 9.4.4
+    repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
