@@ -98,7 +98,7 @@ keycloak:
       enabled: false
     podSecurityContext:
       enabled: false
-    existingConfigmap: keycloak-realm
+    existingConfigmap: iam-components-keycloak-realm
   
   extraEnvVars:
     - name: KEYCLOAK_PROXY_ADDRESS_FORWARDING
@@ -108,7 +108,7 @@ keycloak:
     - name: VCISSUER_ISSUER_DID
       value: "did:web:dome-iam.fiware.dev:did"
     - name: VCISSUER_WALTID_ADDRESS
-      value: "http://waltid-vcwaltid"
+      value: "http://iam-components-vcwaltid"
 
 
   extraVolumeMounts:
@@ -128,18 +128,18 @@ keycloak:
       emptyDir: {}
     - name: profiles
       configMap:
-        name: keycloak-profile
+        name: iam-components-keycloak-profile
     - name: providers
       emptyDir: {}
     - name: issuer-key
       configMap:
-        name: keycloak-key
+        name: iam-components-keycloak-key
     - name: did-config
       configMap:
-        name: keycloak-did-config
+        name: iam-components-keycloak-did-config
     - name: did-secret
       secret: 
-        secretName: waltid-vcwaltid-tls-sec
+        secretName: iam-components-vcwaltid-tls-sec
 
 
   initContainers:
@@ -157,7 +157,7 @@ keycloak:
         - /opt/did/script/import.sh
       env:
         - name: WALTID_CORE_ADDRESS
-          value: "waltid-vcwaltid:7000"
+          value: "iam-components-vcwaltid:7000"
       volumeMounts:
         - name: did-config
           mountPath: /opt/did/script
