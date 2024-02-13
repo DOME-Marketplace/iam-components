@@ -1,0 +1,174 @@
+route:
+  enabled: true
+  host: kc.dome-iam.fiware.dev
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  certificate:
+    issuer:
+      kind: ClusterIssuer
+      name: letsencrypt-aws-prod
+
+realm:
+  clients:
+    - did: did:web:some-service.dome-iam.fiware.dev:did
+      description: Client to connect to some service
+      roles:
+        - name: CREATE_ISSUER
+          description: Is allowed to create issuers
+        - name: UPDATE_ISSUER
+          description: Is allowed to update issuers
+        - name: DELETE_ISSUER
+          description: Is allowed to delete issuers
+      vc:
+        name: SomeService
+        types:
+          - ldp_vc
+          - jwt_vc_json
+        claims:
+          - email
+          - firstName
+          - familyName
+          - roles
+    - did: did:web:onboarding.dome-iam.fiware.dev:did
+      description: Client to issue credentials for M2M communication with the onboarding-tir
+      roles:
+        - name: TIR_READER
+          description: Is allowed to read from the tir
+      vc:
+        name: M2MTirCredential
+        types:
+          - ldp_vc
+          - jwt_vc_json
+        claims:
+          - roles
+  users:
+    - username: domeIam
+      password: domeIam
+      clientRoles:
+        - clientDid: did:web:some-service.dome-iam.fiware.dev:did
+          roles:
+            - CREATE_ISSUER
+            - UPDATE_ISSUER
+        - clientDid: did:web:onboarding.dome-iam.fiware.dev:did
+          roles:
+            - TIR_READER
+
+waltId:
+  host: dome-iam.fiware.dev
+
+keycloak:
+  image: 
+    tag: 21.1.2-debian-11-r1
+  service:
+    type: ClusterIP
+  logging:
+    level: INFO
+  replicaCount: 1
+  auth:
+    adminUser: fiwareAdmin
+    adminPassword: fiwareAdmin
+  serviceAccount:
+    create: true
+  rbac:
+    create: true
+    rules:
+      - apiGroups:
+        - security.openshift.io
+        resourceNames:
+        - anyuid
+        resources:
+        - securitycontextconstraints
+        verbs:
+        - use
+
+
+  keycloakConfigCli:
+    enabled: true
+    # current image does not contain 20.0.3., thus we need this fix
+    command: 
+      - java
+      - -jar
+      - /opt/bitnami/keycloak-config-cli/keycloak-config-cli-20.0.1.jar
+
+    extraEnvVars:
+      - name: IMPORT_FILES_LOCATIONS
+        value: "/config/*"
+    containerSecurityContext:
+      enabled: false
+    podSecurityContext:
+      enabled: false
+    existingConfigmap: keycloak-realm
+  
+  extraEnvVars:
+    - name: KEYCLOAK_PROXY_ADDRESS_FORWARDING
+      value: "true"
+    - name: KEYCLOAK_LOG_LEVEL
+      value: INFO
+    - name: VCISSUER_ISSUER_DID
+      value: "did:web:dome-iam.fiware.dev:did"
+    - name: VCISSUER_WALTID_ADDRESS
+      value: "http://waltid-vcwaltid"
+
+
+  extraVolumeMounts:
+    - name: profiles
+      mountPath: /opt/bitnami/keycloak/conf/profile.properties
+      subPath: profile.properties
+    - name: providers
+      mountPath: /opt/bitnami/keycloak/providers/
+    - name: issuer-key
+      mountPath: /opt/keys
+    - name: data
+      mountPath: /data
+
+
+  extraVolumes:
+    - name: data
+      emptyDir: {}
+    - name: profiles
+      configMap:
+        name: keycloak-profile
+    - name: providers
+      emptyDir: {}
+    - name: issuer-key
+      configMap:
+        name: keycloak-key
+    - name: did-config
+      configMap:
+        name: keycloak-did-config
+    - name: did-secret
+      secret: 
+        secretName: waltid-vcwaltid-tls-sec
+
+
+  initContainers:
+    - name: add-vc-issuer
+      image: quay.io/fiware/keycloak-vc-issuer:1.0.2
+      imagePullPolicy: Always
+      volumeMounts:
+        - name: providers
+          mountPath: /target
+    - name: load-did
+      image: quay.io/opencloudio/curl:4.2.0-build.8
+      imagePullPolicy: Always
+      command: 
+        - /bin/sh
+        - /opt/did/script/import.sh
+      env:
+        - name: WALTID_CORE_ADDRESS
+          value: "waltid-vcwaltid:7000"
+      volumeMounts:
+        - name: did-config
+          mountPath: /opt/did/script
+        - name: did-secret
+          mountPath: /opt/did/secret
+  
+  postgresql:
+    enabled: false
+
+  externalDatabase:
+    host: postgresql-iam
+    user: postgres
+    database: keycloak_iam
+    password: postgres

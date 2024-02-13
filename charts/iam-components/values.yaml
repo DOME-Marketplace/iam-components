@@ -1,0 +1,58 @@
+## configuration of postgres to be used for the keycloak - see https://github.com/bitnami/charts/tree/main/bitnami/postgresql for details
+postgresql:
+  # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
+  fullnameOverride: postgresql-iam
+  ## auth configuration for the database
+  auth:
+    # -- username to be used
+    username: keycloak
+    # -- should the default postgres user be enabled
+    enablePostgresUser: true
+    # -- password to be used
+    password: postgres
+  ## creates role for ServiceAccount
+  rbac:
+    # -- should role be created
+    create: true
+    ## rules applied to the role
+    rules:
+      - apiGroups:
+          - security.openshift.io
+        resourceNames:
+          - anyuid
+        resources:
+          - securitycontextconstraints
+        verbs:
+          - use
+  ## configuration of the postgres primary replica
+  primary:
+    ## provide db initialization
+    initdb:
+      ## provide scripts for initialization
+      scripts:
+        # -- create the database as expected by the keycloak
+        create.sh: |
+          psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE DATABASE keycloak_iam;"
+
+## configuration of mysql to be used for TIL, CCS and Keyrock - see https://github.com/bitnami/charts/tree/main/bitnami/mysql for details
+mysql:
+  fullnameOverride: mysql-iam
+  auth:
+    rootPassword: password
+    password: password
+    replicationPassword: password
+  rbac:
+    create: true
+    rules:
+      - apiGroups:
+          - security.openshift.io
+        resourceNames:
+          - anyuid
+        resources:
+          - securitycontextconstraints
+        verbs:
+          - use
+  initdbScripts:
+    create.sql: |
+      CREATE DATABASE til;
+      CREATE DATABASE ccs;

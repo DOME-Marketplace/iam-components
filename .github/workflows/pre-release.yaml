@@ -58,7 +58,7 @@ jobs:
               echo "$file was changed"
               baseFolder=$(cut -d'/' -f1 <<< "$file")
               chartName=$(cut -d'/' -f2 <<< "$file")
-              if [ $baseFolder = "charts" ]; then
+              if [ $baseFolder = "charts" ] && [ $chartName = "iam-components" ]; then
                 echo "changed=true" >> "$GITHUB_OUTPUT"
                 break;
               fi  
@@ -127,7 +127,7 @@ jobs:
 
         - name: Set the version
           run: |
-              yq e -i '.version = "${{ needs.generate-version.outputs.version }}"' ./charts/walt-id/Chart.yaml
+              yq e -i '.version = "${{ needs.generate-version.outputs.version }}"' ./charts/iam-components/Chart.yaml
 
         - name: generate docs
           run:
