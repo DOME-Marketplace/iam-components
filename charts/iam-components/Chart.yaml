@@ -7,7 +7,13 @@ appVersion: 0.0.1
 dependencies:
   - name: postgresql
     version: 12.1.13
-    repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+    repository: https://charts.bitnami.com/bitnami
   - name: mysql
     version: 9.4.4
-    repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+    repository: https://charts.bitnami.com/bitnami
+  - name: vcwaltid
+    version: 0.0.18
+    repository: https://i4trust.github.io/helm-charts
+  - name: keycloak
+    version: 13.0.3
+    repository: https://charts.bitnami.com/bitnami
