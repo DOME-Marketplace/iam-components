@@ -1,4 +1,4 @@
-{{- if .Values.route.enabled -}}
+{{- if .Values.keycloak.route.enabled -}}
 {{- $fullName := include "keycloak.fullname" . -}}
 apiVersion: route.openshift.io/v1
 kind: Route
@@ -8,17 +8,17 @@ metadata:
     {{ include "keycloak.labels" . | nindent 4 }}
   annotations:
     cert-utils-operator.redhat-cop.io/certs-from-secret: {{ include "keycloak.fullname" . }}-tls-sec
-    {{- with .Values.route.annotations }}
+    {{- with .Values.keycloak.route.annotations }}
       {{- toYaml . | nindent 4 }}
       {{- end }}
 spec:
-  host: {{ .Values.route.host}}
+  host: {{ .Values.keycloak.route.host}}
   to:
     kind: Service
     name: {{ $fullName }}
-  {{- if .Values.route.tls }}
+  {{- if .Values.keycloak.route.tls }}
   tls:
-  {{- with .Values.route.tls }}
+  {{- with .Values.keycloak.route.tls }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   {{- end }}

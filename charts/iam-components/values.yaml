@@ -9,9 +9,10 @@ postgresql:
     # -- should the default postgres user be enabled
     enablePostgresUser: true
     # -- password to be used
-    password: postgres
-    # credentials for postgres admin user
-    postgresPassword: postgres
+    existingSecret: postgres-secret
+    secretKeys:
+      adminPasswordKey: postgres-root-password
+      userPasswordKey: postgres-password
   ## creates role for ServiceAccount
   rbac:
     # -- should role be created
@@ -40,9 +41,7 @@ postgresql:
 mysql:
   fullnameOverride: mysql-iam
   auth:
-    rootPassword: password
-    password: password
-    replicationPassword: password
+    existingSecret: mysql-secret
   rbac:
     create: true
     rules:
@@ -61,8 +60,6 @@ mysql:
 
 ## configuration of waltid to be used for keycloak and verifier - see https://github.com/dome-marketplace/iam-components/tree/main/charts/walt-id for details
 vcwaltid:
-  # -- fullname
-  fullnameOverride: vcwaltid
   # -- did
   did: did:web:dome-iam.fiware.dev:did
   # -- jwkKid
@@ -79,6 +76,8 @@ vcwaltid:
       issuer:
         kind: ClusterIssuer
         name: letsencrypt-aws-prod
+
+  fullnameOverride: waltid-iam
   ## deployment specific configuration
   deployment:
     ## deployment image
@@ -153,3 +152,507 @@ vcwaltid:
             "VerifiableCredential"
         ]
       }
+
+keycloak:
+  fullnameOverride: keycloak-iam
+
+  route:
+    enabled: true
+    host: kc.dome-iam.fiware.dev
+    tls:
+      insecureEdgeTerminationPolicy: Redirect
+      termination: edge
+    certificate:
+      issuer:
+        kind: ClusterIssuer
+        name: letsencrypt-aws-prod
+
+  realm:
+    clients:
+      - did: did:web:some-service.dome-iam.fiware.dev:did
+        description: Client to connect to some service
+        roles:
+          - name: CREATE_ISSUER
+            description: Is allowed to create issuers
+          - name: UPDATE_ISSUER
+            description: Is allowed to update issuers
+          - name: DELETE_ISSUER
+            description: Is allowed to delete issuers
+        vc:
+          name: SomeService
+          types:
+            - ldp_vc
+            - jwt_vc_json
+          claims:
+            - email
+            - firstName
+            - familyName
+            - roles
+      - did: did:web:onboarding.dome-iam.fiware.dev:did
+        description: Client to issue credentials for M2M communication with the onboarding-tir
+        roles:
+          - name: TIR_READER
+            description: Is allowed to read from the tir
+        vc:
+          name: M2MTirCredential
+          types:
+            - ldp_vc
+            - jwt_vc_json
+          claims:
+            - roles
+    users:
+      - username: domeIam
+        password: domeIam
+        clientRoles:
+          - clientDid: did:web:some-service.dome-iam.fiware.dev:did
+            roles:
+              - CREATE_ISSUER
+              - UPDATE_ISSUER
+          - clientDid: did:web:onboarding.dome-iam.fiware.dev:did
+            roles:
+              - TIR_READER
+
+  image:
+    tag: 21.1.2-debian-11-r1
+  service:
+    type: ClusterIP
+  logging:
+    level: INFO
+  replicaCount: 1
+  auth:
+    adminUser: fiwareAdmin
+    adminPassword: fiwareAdmin
+  serviceAccount:
+    create: true
+  rbac:
+    create: true
+    rules:
+      - apiGroups:
+          - security.openshift.io
+        resourceNames:
+          - anyuid
+        resources:
+          - securitycontextconstraints
+        verbs:
+          - use
+
+
+  keycloakConfigCli:
+    enabled: true
+    # current image does not contain 20.0.3., thus we need this fix
+    command:
+      - java
+      - -jar
+      - /opt/bitnami/keycloak-config-cli/keycloak-config-cli-20.0.1.jar
+
+    extraEnvVars:
+      - name: IMPORT_FILES_LOCATIONS
+        value: "/config/*"
+    containerSecurityContext:
+      enabled: false
+    podSecurityContext:
+      enabled: false
+    existingConfigmap: keycloak-iam-realm
+
+  extraEnvVars:
+    - name: KEYCLOAK_PROXY_ADDRESS_FORWARDING
+      value: "true"
+    - name: KEYCLOAK_LOG_LEVEL
+      value: INFO
+    - name: VCISSUER_ISSUER_DID
+      value: "did:web:dome-iam.fiware.dev:did"
+    - name: VCISSUER_WALTID_ADDRESS
+      value: "http://waltid-iam"
+
+
+  extraVolumeMounts:
+    - name: profiles
+      mountPath: /opt/bitnami/keycloak/conf/profile.properties
+      subPath: profile.properties
+    - name: providers
+      mountPath: /opt/bitnami/keycloak/providers/
+    - name: issuer-key
+      mountPath: /opt/keys
+    - name: data
+      mountPath: /data
+
+
+  extraVolumes:
+    - name: data
+      emptyDir: {}
+    - name: profiles
+      configMap:
+        name: keycloak-iam-profile
+    - name: providers
+      emptyDir: {}
+    - name: issuer-key
+      configMap:
+        name: keycloak-iam-key
+    - name: did-config
+      configMap:
+        name: keycloak-iam-did-config
+    - name: did-secret
+      secret:
+        secretName: waltid-iam-tls-sec
+
+
+  initContainers:
+    - name: add-vc-issuer
+      image: quay.io/fiware/keycloak-vc-issuer:1.0.2
+      imagePullPolicy: Always
+      volumeMounts:
+        - name: providers
+          mountPath: /target
+    - name: load-did
+      image: quay.io/opencloudio/curl:4.2.0-build.8
+      imagePullPolicy: Always
+      command:
+        - /bin/sh
+        - /opt/did/script/import.sh
+      env:
+        - name: WALTID_CORE_ADDRESS
+          value: "waltid-iam:7000"
+      volumeMounts:
+        - name: did-config
+          mountPath: /opt/did/script
+        - name: did-secret
+          mountPath: /opt/did/secret
+
+  postgresql:
+    enabled: false
+
+  externalDatabase:
+    host: postgresql-iam
+    user: postgres
+    database: keycloak_iam
+    existingSecret: postgres-secret
+    existingSecretPasswordKey: postgres-password
+
+credentials-config-service:
+  fullnameOverride: ccs-iam
+  deployment:
+    image:
+      repository: quay.io/fiware/credentials-config-service
+      tag: 1.0.1
+  database:
+    persistence: true
+    host: mysql-iam
+    username: root
+    name: ccs
+    existingSecret:
+      enabled: true
+      name: mysql-secret
+      key: dbPassword
+
+trusted-issuers-list:
+  fullnameOverride: til-iam
+  route:
+    til:
+      enabled: true
+      host: til.dome-iam.fiware.dev
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: edge
+      certificate:
+        issuer:
+          kind: ClusterIssuer
+          name: letsencrypt-aws-prod
+    tir:
+      enabled: true
+      host: tir.dome-iam.fiware.dev
+      tls:
+        insecureEdgeTerminationPolicy: Redirect
+        termination: edge
+      certificate:
+        issuer:
+          kind: ClusterIssuer
+          name: letsencrypt-aws-prod
+
+  deployment:
+    image:
+      tag: 0.2.0
+  database:
+    persistence: true
+    host: mysql-iam
+    username: root
+    name: til
+    existingSecret:
+      enabled: true
+      name: mysql-secret
+      key: dbPassword
+
+vcverifier:
+
+  deployment:
+
+    # Image
+    image:
+      repository: quay.io/fiware/vcverifier
+      tag: 2.8.0
+      pullPolicy: Always
+
+    # Logging
+    logging:
+      level: DEBUG
+      pathsToSkip:
+        - "/health"
+
+    # Walt-id config
+    ssikit:
+      auditorUrl: http://waltid-iam:7003
+
+    # Verifier config
+    verifier:
+      tirAddress: https://tir.dome-iam.fiware.dev/v4/issuers
+      did: did:web:dome-iam.fiware.dev:did
+
+    # Config service
+    configRepo:
+      configEndpoint: http://ccs-iam:8080/
+
+  route:
+    enabled: true
+    host: verifier.dome-iam.fiware.dev
+    tls:
+      insecureEdgeTerminationPolicy: Redirect
+      termination: edge
+    certificate:
+      issuer:
+        kind: ClusterIssuer
+        name: letsencrypt-aws-prod
+
+keyrock:
+  fullnameOverride: keyrock-iam
+  statefulset:
+    image:
+      repository: quay.io/wi_stefan/keyrock
+      tag: sn-fix
+      pullPolicy: IfNotPresent
+
+  db:
+    user: root
+    host: mysql-iam
+
+  admin:
+    user: admin
+    email: admin@fiware.org
+
+  existingSecret: keyrock-secret
+
+  host: https://ar.doma-iam.fiware.dev
+
+  route:
+    enabled: true
+    routes:
+      - host: ar.dome-iam.fiware.dev
+        tls:
+          termination: edge
+          insecureEdgeTerminationPolicy: Redirect
+        # should a certificate for the address automatically be generated
+        certificate:
+          issuer:
+            kind: ClusterIssuer
+            name: letsencrypt-aws-prod
+
+  ## Theme configuration for Keyrock
+  theme:
+    ## -- Enable theme
+    enabled: false
+
+  ## Configuration of Authorisation Registry (AR)
+  authorisationRegistry:
+    # -- Enable usage of authorisation registry
+    enabled: true
+    # -- Identifier (EORI) of AR
+    identifier: "did:web:dome-iam.fiware.dev:did"
+    # -- URL of AR
+    url: "internal"
+
+  ## Configuration of iSHARE Satellite
+  satellite:
+    # -- Enable usage of satellite
+    enabled: true
+    # -- Identifier (EORI) of satellite
+    identifier: "EU.EORI.FIWARESATELLITE"
+    # -- URL of satellite
+    url: "https://tir.dome-iam.fiware.dev"
+    # -- Token endpoint of satellite
+    tokenEndpoint: "https://tir.dome-iam.fiware.dev/token"
+    # -- Parties endpoint of satellite
+    partiesEndpoint: "https://tir.dome-iam.fiware.dev/parties"
+
+  ## -- Configuration of local key and certificate for validation and generation of tokens
+  token:
+    enabled: false
+
+
+  additionalEnvVars:
+    - name: IDM_TITLE
+      value: "DOME IAM AR"
+    - name: IDM_DEBUG
+      value: "true"
+    - name: DEBUG
+      value: "*"
+    - name: IDM_DB_NAME
+      value: bp_one_idm
+    - name: IDM_DB_SEED
+      value: "true"
+    - name: IDM_SERVER_MAX_HEADER_SIZE
+      value: "32768"
+    - name: IDM_EMAIL_HOST
+      value: "mailgun-fiware-io.infra.svc.cluster.local"
+    - name: IDM_EMAIL_PORT
+      value: "25"
+    - name: IDM_EMAIL_ADDRESS
+      value: "bp-one@fiware.io"
+    - name: IDM_PR_CLIENT_ID
+      value: "did:web:dome-iam.fiware.dev:did"
+    - name: IDM_PR_CLIENT_KEY
+      valueFrom:
+        secretKeyRef:
+          name: waltid-vcwaltid-tls-sec
+          key: tls.key
+    - name: IDM_PR_CLIENT_CRT
+      valueFrom:
+        secretKeyRef:
+          name: waltid-iam-tls-sec
+          key: tls.crt
+  ## Init scripts for Keyrock
+  initScript:
+    ## Creation of role mapping policies during deployment
+    rolePolicy:
+      policyEnabled: true
+      dbName: bp_one_idm
+      issuer: "did:web:dome-iam.fiware.dev:did"
+      notBefore: "1616583866"
+      notOnOrAfter: "1735817171"
+      issuerDid: "did:web:dome-iam.fiware.dev:did"
+
+dsba-pdp:
+  fullnameOverride: pdp-iam
+  # DB
+  db:
+    enabled: false
+    migrate:
+      enabled: false
+
+  deployment:
+    # Image
+    image:
+      pullPolicy: Always
+      repository: quay.io/fiware/dsba-pdp
+      # includes the http policy support
+      tag: 1.2.0
+
+    # Log level
+    logLevel: TRACE
+
+    # iSHARE config
+    ishare:
+      existingSecret: waltid-iam-tls-sec
+
+      clientId: did:web:dome-iam.fiware.dev:did
+      trustedFingerprints:
+        - MYFINGERPRINT
+
+      ar:
+        id: "did:web:dome-iam.fiware.dev:did"
+        delegationPath: "/ar/delegation"
+        tokenPath: "/oauth2/token"
+        url: "https://ar.dome-iam.fiware.dev"
+
+      trustAnchor:
+        id: "EU.EORI.FIWARESATELLITE"
+        tokenPath: "/token"
+        trustedListPath: "/trusted_list"
+        url: "https://tir.dome-iam.fiware.dev"
+
+    # Verifier
+    trustedVerifiers:
+      - https://verifier.dome-iam.fiware.dev/.well-known/jwks
+
+    # Provider DID
+    providerId: "did:web:dome-iam.fiware.dev:did"
+
+  # ENVs
+  additionalEnvVars:
+    - name: ISHARE_CERTIFICATE_PATH
+      value: /iShare/tls.crt
+    - name: ISHARE_KEY_PATH
+      value: /iShare/tls.key
+
+kong:
+  nameOverride: kong-iam
+  image:
+    repository: quay.io/fiware/kong
+    tag: "0.5.7"
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+
+  autoscaling:
+    enabled: false
+
+  env:
+    database: "off"
+    nginx_worker_processes: "2"
+    proxy_access_log: /dev/stdout
+    admin_access_log: /dev/stdout
+    admin_gui_access_log: /dev/stdout
+    portal_api_access_log: /dev/stdout
+    proxy_error_log: /dev/stderr
+    admin_error_log: /dev/stderr
+    admin_gui_error_log: /dev/stderr
+    portal_api_error_log: /dev/stderr
+    prefix: /kong_prefix/
+    log_level: debug
+    nginx_proxy_large_client_header_buffers: "16 128k"
+    nginx_proxy_http2_max_field_size: "32k"
+    nginx_proxy_http2_max_header_size: "32k"
+    plugins: bundled,pep-plugin,ngsi-ishare-policies
+    pluginserver_names: pep-plugin
+    pluginserver_pep_plugin_start_cmd: "/go-plugins/pep-plugin"
+    pluginserver_pep_plugin_query_cmd: "/go-plugins/pep-plugin -dump"
+
+  ingressController:
+    enabled: false
+    installCRDs: false
+
+  proxy:
+    type: ClusterIP
+    enabled: true
+    tls:
+      enabled: false
+    ingress:
+      enabled: false
+    route:
+      enabled: true
+      host: kong.dome-iam.fiware.dev
+      certificate:
+        issuer:
+          kind: ClusterIssuer
+          name: letsencrypt-aws-prod
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
+
+  admin:
+    enabled: true
+    type: ClusterIP
+    http:
+      enabled: true
+      servicePort: 8001
+      containerPort: 8001
+
+  status:
+    enabled: true
+    http:
+      enabled: true
+      containerPort: 9102
+
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '9102'
+
+  dblessConfig:
+    configMap: kong-iam-configmap
