@@ -1,4 +1,4 @@
-{{- if .Values.route.certificate -}}
+{{- if .Values.keycloak.route.certificate -}}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -8,8 +8,8 @@ metadata:
 spec:
   secretName: {{ include "keycloak.fullname" . }}-tls-sec
   issuerRef:
-    {{- toYaml .Values.route.certificate.issuer | nindent 4 }}
-  commonName: {{ .Values.route.host }}
+    {{- toYaml .Values.keycloak.route.certificate.issuer | nindent 4 }}
+  commonName: {{ .Values.keycloak.route.host }}
   dnsNames:
-    - {{ .Values.route.host }}
+    - {{ .Values.keycloak.route.host }}
 {{- end -}}
