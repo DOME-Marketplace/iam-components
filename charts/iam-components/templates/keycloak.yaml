@@ -24,11 +24,11 @@ data:
   keyfile.json: |-
     {
       "kty": "OKP",
-      "d": "FoJjD3Q6Wh0JHt-tuN3bwGHmPSWa7p8pVe9P9cDIzWw",
+      "d": "gGqnb6ij2s-BGUpAgWVGv9odIHciuF-GuLDqyt2pLm0",
       "use": "sig",
       "crv": "Ed25519",
-      "kid": "{{ trimPrefix "did:key:" .Values.keycloak.issuerDid }}",
-      "x": "8FSufgpQ8VXgxnR5svvi-j8_4iXxB0TIsVVb0EiRP7s",
+      "kid": "z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g",
+      "x": "Pr7-Zath5ZMyvikX93LzsJNkl6HcAAJdgrwlBTSE6gs",
       "alg": "EdDSA"
     }
 
@@ -115,7 +115,7 @@ data:
           "username": "{{ $user.username }}",
           "enabled": true,
           "firstName": "Legal",
-          "familyName": "HappyPetsEmployee",
+          "lastName": "HappyPetsEmployee",
           "email": "user@mymail.com",
           "credentials": [
             {
@@ -162,7 +162,7 @@ data:
           "standardFlowEnabled": true,
           "implicitFlowEnabled": false,
           "directAccessGrantsEnabled": false,
-          "serviceAccountsEnabled": true,
+          "serviceAccountsEnabled": false,
           "publicClient": false,
           "frontchannelLogout": false,
           "protocol": "SIOP-2",
@@ -170,7 +170,9 @@ data:
             "client.secret.creation.time": "1675260539",
             "expiryInMin": "5000000",
             "vctypes_{{ $client.vc.name }}": "{{ join $comma $client.vc.types }}",
-            "{{ $client.vc.name }}_claims": "{{ join $comma $client.vc.claims }}"
+            "vctypes_NaturalPersonCredential": "ldp_vc,jwt_vc_json",
+            "{{ $client.vc.name }}_claims": "{{ join $comma $client.vc.claims }}",
+            "NaturalPersonCredential_claims": "email,firstName,familyName,roles"
           },
           "authenticationFlowBindingOverrides": {},
           "fullScopeAllowed": true,

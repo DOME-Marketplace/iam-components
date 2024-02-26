@@ -56,12 +56,12 @@ public class Application {
 	public void registerCredentialsConfig() throws Exception {
 		ServiceScopesEntryVO serviceScopeEntry = new ServiceScopesEntryVO();
 		serviceScopeEntry.add(new CredentialVO().type("VerifiableCredential")
-				.trustedIssuersLists(List.of("http://iam-trusted-issuers-list:5050/"))
-				.trustedParticipantsLists(List.of("http://iam-trusted-issuers-list:5050/")
+				.trustedIssuersLists(List.of("http://til-iam:5050/"))
+				.trustedParticipantsLists(List.of("http://til-iam:5050/")
 				));
 		serviceScopeEntry.add(new CredentialVO().type("PacketDeliveryService")
-				.trustedIssuersLists(List.of("http://it-trusted-issuers-list:5050/"))
-				.trustedParticipantsLists(List.of("http://it-trusted-issuers-list:5050/")));
+				.trustedIssuersLists(List.of("http://til-iam:5050/"))
+				.trustedParticipantsLists(List.of("http://til-iam:5050/")));
 		ServiceVO pdcPortalService = new ServiceVO()
 				.id(PacketDeliveryEnvironment.PACKET_DELIVERY_SERVICE_ID)
 				.defaultOidcScope("pdc")
