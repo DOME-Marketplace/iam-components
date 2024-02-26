@@ -4,17 +4,14 @@ metadata:
   name: {{ include "keycloak.fullname" . }}-did-config
 data:
   import.sh: |-
-    export KEY=$(cat /opt/did/secret/tls.key)
+    export KEY=$(cat /opt/keys/keyfile.json)
     export KEY_ID=$(curl --location "${WALTID_CORE_ADDRESS}/v1/key/import" --header 'Content-Type: text/plain' --data "${KEY}" | jq -r '.id')
     echo The key id: ${KEY_ID}
     curl --location "${WALTID_CORE_ADDRESS}/v1/did/create" \
       --header 'Content-Type: application/json' \
       --data "{
-          \"method\": \"web\",
-          \"keyAlias\":\"${KEY_ID}\",
-          \"domain\": \"{{ .Values.vcwaltid.route.host }}\",
-          \"path\": \"did\",
-          \"x5u\": \"https://{{ .Values.vcwaltid.route.host }}/certs/tls.crt\"
+          \"method\": \"key\",
+          \"keyAlias\":\"${KEY_ID}\"
       }"
 
 ---
@@ -30,7 +27,7 @@ data:
       "d": "FoJjD3Q6Wh0JHt-tuN3bwGHmPSWa7p8pVe9P9cDIzWw",
       "use": "sig",
       "crv": "Ed25519",
-      "kid": "z6MkvdQnXeKgRceAhNsZYjpQjSFcmTXshyGDvnNw7gziQhjG",
+      "kid": "{{ trimPrefix "did:key:" .Values.keycloak.issuerDid }}",
       "x": "8FSufgpQ8VXgxnR5svvi-j8_4iXxB0TIsVVb0EiRP7s",
       "alg": "EdDSA"
     }
@@ -63,7 +60,7 @@ data:
       "displayNameHtml": "<div class=\"kc-logo-text\"><span>Keycloak DOME</span></div>",
       "enabled": true,
       "attributes": {
-        "frontendUrl": "https://{{ .Values.keycloak.route.host }}"
+        "frontendUrl": "http://localhost:8080"
       },
       "sslRequired": "none",
       "roles": {
@@ -117,6 +114,8 @@ data:
         {
           "username": "{{ $user.username }}",
           "enabled": true,
+          "firstName": "Legal",
+          "familyName": "HappyPetsEmployee",
           "email": "user@mymail.com",
           "credentials": [
             {
