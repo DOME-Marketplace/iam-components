@@ -677,7 +677,7 @@ keyrock:
   statefulset:
     image:
       repository: quay.io/wi_stefan/keyrock
-      tag: sn-fix
+      tag: sn-fix-2
       pullPolicy: IfNotPresent
   db:
     user: root
@@ -686,7 +686,6 @@ keyrock:
   admin:
     user: admin
     email: admin@fiware.org
-  existingSecret: keyrock-secret
   host: http://ar-iam
   route:
     enabled: false
@@ -723,34 +722,18 @@ keyrock:
       value: "true"
     - name: IDM_SERVER_MAX_HEADER_SIZE
       value: "32768"
-    - name: IDM_EMAIL_HOST
-      value: "mailgun-fiware-io.infra.svc.cluster.local"
-    - name: IDM_EMAIL_PORT
-      value: "25"
-    - name: IDM_EMAIL_ADDRESS
-      value: "bp-one@fiware.io"
     - name: IDM_PR_CLIENT_ID
       value: "did:key:z6MksU6tMfbaDzvaRe5oFE4eZTVTV4HJM4fmQWWGsDGQVsEr"
     - name: IDM_PR_CLIENT_KEY
       valueFrom:
         secretKeyRef:
-          name: waltid-iam-tls-sec
-          key: tls.key
+          name: keyrock-ar-sec
+          key: key
     - name: IDM_PR_CLIENT_CRT
       valueFrom:
         secretKeyRef:
-          name: waltid-iam-tls-sec
-          key: tls.crt
-  ## Init scripts for Keyrock
-  initScript:
-    ## Creation of role mapping policies during deployment
-    rolePolicy:
-      policyEnabled: true
-      dbName: bp_one_idm
-      issuer: "did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g"
-      notBefore: "1616583866"
-      notOnOrAfter: "1735817171"
-      issuerDid: "did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g"
+          name: keyrock-ar-sec
+          key: cert
   initData:
     backoffLimit: 50
     initEnabled: true
@@ -764,7 +747,326 @@ keyrock:
     env:
       - name: DB_PASSWORD
         value: "password"
-    existingConfigMap: keyrock-iam-cm
+    scriptData:
+      create.sh: |-
+        mysql -h mysql-iam -u root -p$DB_PASSWORD bp_one_idm <<EOF
+
+        -- Static objects
+        SET @rules := JSON_ARRAY(
+          JSON_OBJECT(
+            "effect", "Permit"
+          )
+        );
+
+        SET @subjectProvider := "PROVIDER";
+        SET @subjectConsumer := "CONSUMER";
+        SET @subjectLear := "LEGAL_REPRESENTATIVE";
+        SET @subjectGold := "GOLD_CUSTOMER";
+        SET @subjectStandard := "STANDARD_CUSTOMER";
+
+        -- Policies Gold
+        SET @policiesGold := JSON_ARRAY(
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("PATCH"),
+              "resource", JSON_OBJECT(
+                "type", "DELIVERYORDER",
+                "attributes", JSON_ARRAY("pta","pda"),
+                "identifiers", JSON_ARRAY("*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET"),
+              "resource", JSON_OBJECT(
+                "type", "DELIVERYORDER",
+                "attributes", JSON_ARRAY("*"),
+                "identifiers", JSON_ARRAY("*")
+              )
+            )
+          )
+        );
+
+        -- Policies Lear 
+        SET @policiesLear := JSON_ARRAY(
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET", "POST", "PUT"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/party/*")
+              )
+            )
+          )
+        );
+
+        -- Policies Consumer
+        SET @policiesConsumer := JSON_ARRAY(
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/party/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/productCatalogManagement/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST","PUT"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/productOrderingManagement/*")
+              )
+            )
+          )
+        );
+
+        -- Policies Provider
+        SET @policiesProvider := JSON_ARRAY(
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/party/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST","PUT","DELETE"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/customerBillManagement/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST","PUT","DELETE"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/customerManagement/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST","PUT","DELETE"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/productCatalogManagement/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST","PUT","DELETE"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/productInventory/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST","PUT","DELETE"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/productOrderingManagement/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST","PUT","DELETE"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/resourceCatalog/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST","PUT","DELETE"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/resourceFunctionActivation/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST","PUT","DELETE"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/resourceInventoryManagement/*")
+              )
+            )
+          ),
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET","POST","PUT","DELETE"),
+              "resource", JSON_OBJECT(
+                "type", "PATH",
+                "identifiers", JSON_ARRAY("/tmf-api/serviceCatalogManagement/*")
+              )
+            )
+          )
+        );
+
+
+        -- Policies Standard
+        SET @policiesStandard := JSON_ARRAY(
+          JSON_OBJECT(
+            "rules", CAST(@rules as JSON),
+            "target", JSON_OBJECT(
+              "actions", JSON_ARRAY("GET"),
+              "resource", JSON_OBJECT(
+                "type", "DELIVERYORDER",
+                "attributes", JSON_ARRAY("*"),
+                "identifiers", JSON_ARRAY("*")
+              )
+            )
+          )
+        );
+
+        -- Insert Delegation Evidence Gold VC
+        SET @delegationGoldVC := JSON_OBJECT(
+          "target", JSON_OBJECT(
+            "accessSubject", @subjectGold
+          ),
+          "notBefore", 1616583866,
+          "notOnOrAfter", 1735817171,
+          "policyIssuer", "did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g",
+          "policySets", JSON_ARRAY(
+            JSON_OBJECT(
+              "target", JSON_OBJECT(
+                "environment", JSON_OBJECT(
+                  "licenses", JSON_ARRAY("ISHARE.0001")
+                )
+              ),
+              "policies", CAST(@policiesGold as JSON)
+            )
+          )
+        );
+        INSERT IGNORE INTO delegation_evidence (policy_issuer, access_subject,policy) VALUES ("did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g", @subjectGold, @delegationGoldVC);
+
+        -- Insert Delegation Evidence Provider VC
+        SET @delegationProviderVC := JSON_OBJECT(
+          "target", JSON_OBJECT(
+            "accessSubject", @subjectProvider
+          ),
+          "notBefore", 1616583866,
+          "notOnOrAfter", 1735817171,
+          "policyIssuer", "did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g",
+          "policySets", JSON_ARRAY(
+            JSON_OBJECT(
+              "target", JSON_OBJECT(
+                "environment", JSON_OBJECT(
+                  "licenses", JSON_ARRAY("ISHARE.0001")
+                )
+              ),
+              "policies", CAST(@policiesProvider as JSON)
+            )
+          )
+        );
+        INSERT IGNORE INTO delegation_evidence (policy_issuer, access_subject,policy) VALUES ("did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g", @subjectProvider, @delegationProviderVC);
+
+        -- Insert Delegation Evidence Lear VC
+        SET @delegationLearVC := JSON_OBJECT(
+          "target", JSON_OBJECT(
+            "accessSubject", @subjectlear
+          ),
+          "notBefore", 1616583866,
+          "notOnOrAfter", 1735817171,
+          "policyIssuer", "did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g",
+          "policySets", JSON_ARRAY(
+            JSON_OBJECT(
+              "target", JSON_OBJECT(
+                "environment", JSON_OBJECT(
+                  "licenses", JSON_ARRAY("ISHARE.0001")
+                )
+              ),
+              "policies", CAST(@policiesLear as JSON)
+            )
+          )
+        );
+        INSERT IGNORE INTO delegation_evidence (policy_issuer, access_subject,policy) VALUES ("did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g", @subjectLear, @delegationLearVC);
+
+
+
+        -- Insert Delegation Evidence Consumer VC
+        SET @delegationConsumerVC := JSON_OBJECT(
+          "target", JSON_OBJECT(
+            "accessSubject", @subjectConsumer
+          ),
+          "notBefore", 1616583866,
+          "notOnOrAfter", 1735817171,
+          "policyIssuer", "did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g",
+          "policySets", JSON_ARRAY(
+            JSON_OBJECT(
+              "target", JSON_OBJECT(
+                "environment", JSON_OBJECT(
+                  "licenses", JSON_ARRAY("ISHARE.0001")
+                )
+              ),
+              "policies", CAST(@policiesConsumer as JSON)
+            )
+          )
+        );
+        INSERT IGNORE INTO delegation_evidence (policy_issuer, access_subject,policy) VALUES ("did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g", @subjectConsumer, @delegationConsumerVC);
+
+        -- Insert Delegation Evidence Standard VC
+        SET @delegationStandardVC := JSON_OBJECT(
+          "target", JSON_OBJECT(
+            "accessSubject", @subjectStandard
+          ),
+          "notBefore", 1616583866,
+          "notOnOrAfter", 1735817171,
+          "policyIssuer", "did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g",
+          "policySets", JSON_ARRAY(
+            JSON_OBJECT(
+              "target", JSON_OBJECT(
+                "environment", JSON_OBJECT(
+                  "licenses", JSON_ARRAY("ISHARE.0001")
+                )
+              ),
+              "policies", CAST(@policiesStandard as JSON)
+            )
+          )
+        );
+        INSERT IGNORE INTO delegation_evidence (policy_issuer, access_subject,policy) VALUES ("did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g", @subjectStandard, @delegationStandardVC);
+
+        COMMIT;
+        EOF
 
 dsba-pdp:
   fullnameOverride: pdp-iam
@@ -784,7 +1086,7 @@ dsba-pdp:
     logLevel: TRACE
     # iSHARE config
     ishare:
-      existingSecret: waltid-iam-tls-sec
+      existingSecret: keyrock-ar-sec
       clientId: EU.EORI.PACKETDELIVERY
       trustedFingerprints:
         - MYFINGERPRINT
@@ -806,9 +1108,9 @@ dsba-pdp:
   # ENVs
   additionalEnvVars:
     - name: ISHARE_CERTIFICATE_PATH
-      value: /iShare/tls.crt
+      value: /iShare/cert
     - name: ISHARE_KEY_PATH
-      value: /iShare/tls.key
+      value: /iShare/key
 
 kong:
   nameOverride: kong-iam
@@ -849,7 +1151,24 @@ kong:
   proxy:
     tls:
       enabled: false
+  admin:
+    enabled: true
+    type: ClusterIP
+    http:
+      enabled: true
+      servicePort: 8001
+      containerPort: 8001
+  status:
+    enabled: true
+    http:
+      enabled: true
+      containerPort: 9102
   dblessConfig:
     configMap: kong-iam-configmap
-  waitImage:
+
+orion:
+  fullnameOverride: orion-ld
+  test:
     enabled: false
+  mongo:
+    enabled: true
