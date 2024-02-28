@@ -1,64 +1,48 @@
-## configuration of postgres to be used for the keycloak - see https://github.com/bitnami/charts/tree/main/bitnami/postgresql for details
 postgresql:
-  # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
   fullnameOverride: postgresql-iam
-  ## auth configuration for the database
   auth:
-    # -- username to be used
     username: keycloak
-    # -- should the default postgres user be enabled
     enablePostgresUser: true
-    # -- password to be used
     existingSecret: postgres-secret
     secretKeys:
       adminPasswordKey: postgres-root-password
       userPasswordKey: postgres-password
-  ## creates role for ServiceAccount
   rbac:
-    # -- should role be created
     create: false
-  ## configuration of the postgres primary replica
   primary:
-    ## provide db initialization
+    persistence:
+      enabled: false
     initdb:
-      ## provide scripts for initialization
       scripts:
-        # -- create the database as expected by the keycloak
         create.sh: |
           psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE DATABASE keycloak_iam;"
           psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "ALTER DATABASE keycloak_iam OWNER TO keycloak;"
 
-## configuration of mysql to be used for TIL, CCS and Keyrock - see https://github.com/bitnami/charts/tree/main/bitnami/mysql for details
 mysql:
   nameOverride: mysql-iam
   fullnameOverride: mysql-iam
   auth:
     existingSecret: mysql-secret
-    createDatabase: false
   serviceAccount:
     create: false
-  initdbScripts:
-    create.sql: |
-      CREATE DATABASE til;
-      CREATE DATABASE ccs;
+  primary:
+    persistence:
+      enabled: false
+  secondary:
+    persistence:
+      enabled: false
+  initdbScripts: {}
 
-## configuration of waltid to be used for keycloak and verifier - see https://github.com/dome-marketplace/iam-components/tree/main/charts/walt-id for details
 vcwaltid:
-  ## route configuration
   route:
     enabled: false
     certificate: {}
 
   fullnameOverride: waltid-iam
-  ## deployment specific configuration
   deployment:
-    ## deployment image
     image:
-      # -- deployment image repository
       repository: waltid/ssikit
-      # -- deployment image tag
       tag: 1.2311262046.fix-didwebpath
-      # -- deployment image pull policy
       pullPolicy: Always
   api:
     core:
@@ -73,10 +57,7 @@ vcwaltid:
       enabled: true
 
   persistence:
-    enabled: true
-    pvc:
-      size: 1Gi
-  ## credential templates
+    enabled: false
   templates:
     GaiaXParticipantCredential.json: |
       {
@@ -156,8 +137,7 @@ vcwaltid:
 
 keycloak:
   fullnameOverride: keycloak-iam
-  frontendUrl: http://localhost
-
+  frontendUrl: http://localhost:8080
   realm:
     clients:
       - did: did:key:z6MksU6tMfbaDzvaRe5oFE4eZTVTV4HJM4fmQWWGsDGQVsEr
@@ -189,7 +169,9 @@ keycloak:
   image:
     tag: 21.1.2-debian-11-r1
   service:
-    type: ClusterIP
+    type: LoadBalancer
+    ports:
+      http: 8080
   logging:
     level: INFO
   replicaCount: 1
@@ -200,7 +182,6 @@ keycloak:
     create: false
   rbac:
     create: false
-
   keycloakConfigCli:
     enabled: true
     # current image does not contain 20.0.3., thus we need this fix
@@ -213,7 +194,6 @@ keycloak:
     podSecurityContext:
       enabled: false
     existingConfigmap: keycloak-iam-realm
-
   extraEnvVars:
     - name: KEYCLOAK_PROXY_ADDRESS_FORWARDING
       value: "true"
@@ -223,8 +203,6 @@ keycloak:
       value: "did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g"
     - name: VCISSUER_WALTID_ADDRESS
       value: "http://waltid-iam"
-
-
   extraVolumeMounts:
     - name: profiles
       mountPath: /opt/bitnami/keycloak/conf/profile.properties
@@ -235,8 +213,6 @@ keycloak:
       mountPath: /opt/keys
     - name: data
       mountPath: /data
-
-
   extraVolumes:
     - name: data
       emptyDir: {}
@@ -251,7 +227,6 @@ keycloak:
     - name: did-config
       configMap:
         name: keycloak-iam-did-config
-
   initContainers:
     - name: add-vc-issuer
       image: quay.io/fiware/keycloak-vc-issuer:1.0.2
@@ -273,10 +248,8 @@ keycloak:
           mountPath: /opt/did/script
         - name: issuer-key
           mountPath: /opt/keys
-
   postgresql:
     enabled: false
-
   externalDatabase:
     host: postgresql-iam
     user: postgres
@@ -291,24 +264,20 @@ credentials-config-service:
       repository: quay.io/fiware/credentials-config-service
       tag: 1.0.1
   database:
-    persistence: true
-    host: mysql-iam
-    username: root
-    name: ccs
-    existingSecret:
-      enabled: true
-      name: mysql-secret
-      key: dbPassword
+    persistence: false
+  service:
+    type: LoadBalancer
+    port: 4040
 
 trusted-issuers-list:
   fullnameOverride: til-iam
   route:
     til:
       enabled: false
-      certificate: {}
+      certificate:
     tir:
       enabled: false
-      certificate: {}
+      certificate:
   ingress:
     til:
       enabled: false
@@ -317,15 +286,11 @@ trusted-issuers-list:
   deployment:
     image:
       tag: 0.2.0
+  service:
+    port: 5050
+    type: LoadBalancer
   database:
-    persistence: true
-    host: mysql-iam
-    username: root
-    name: til
-    existingSecret:
-      enabled: true
-      name: mysql-secret
-      key: dbPassword
+    persistence: false
 
 trusted-issuers-registry:
   fullnameOverride: tir-iam
@@ -338,7 +303,7 @@ trusted-issuers-registry:
       participant: onboarding
   route:
     enabled: false
-    certificate: {}
+    certificate:
   tir:
     ngsiBroker:
       url: http://orion-ld:1026/
@@ -640,36 +605,36 @@ trusted-issuers-registry:
           ROOT: ERROR
           org.fiware.iam: DEBUG
 
-
 vcverifier:
   fullnameOverride: verifier-iam
   deployment:
-    # Image
     image:
       repository: quay.io/fiware/vcverifier
       tag: 2.8.0
       pullPolicy: Always
-    # Logging
     logging:
       level: DEBUG
       pathsToSkip:
         - "/health"
-    # Walt-id config
     ssikit:
       auditorUrl: http://waltid-iam:7003
-    # Verifier config
     verifier:
       tirAddress: https://tir-iam/v4/issuers
       did: did:key:z6MksU6tMfbaDzvaRe5oFE4eZTVTV4HJM4fmQWWGsDGQVsEr
-    # Config service
     configRepo:
-      configEndpoint: http://ccs-iam:8080/
+      configEndpoint: http://ccs-iam:4040/
   route:
     enabled: false
-    certificate: {}
+    certificate:
+  service:
+    type: LoadBalancer
+    port: 7070
 
 keyrock:
   fullnameOverride: keyrock-iam
+  service:
+    type: LoadBalancer
+    port: 5080
   statefulset:
     image:
       repository: quay.io/wi_stefan/keyrock
@@ -683,25 +648,15 @@ keyrock:
   host: http://keyrock-iam
   route:
     enabled: false
-  ## Configuration of Authorisation Registry (AR)
   authorisationRegistry:
-    # -- Enable usage of authorisation registry
     enabled: true
-    # -- Identifier (EORI) of AR
     identifier: "did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g"
-    # -- URL of AR
     url: "internal"
-  ## Configuration of iSHARE Satellite
   satellite:
-    # -- Enable usage of satellite
     enabled: true
-    # -- Identifier (EORI) of satellite
     identifier: "EU.EORI.FIWARESATELLITE"
-    # -- URL of satellite
     url: "http://tir-iam"
-    # -- Token endpoint of satellite
     tokenEndpoint: "http://tir-iam/token"
-    # -- Parties endpoint of satellite
     partiesEndpoint: "http://tir-iam/parties"
   additionalEnvVars:
     - name: IDM_TITLE
@@ -1064,21 +1019,16 @@ keyrock:
 
 dsba-pdp:
   fullnameOverride: pdp-iam
-  # DB
   db:
     enabled: false
     migrate:
       enabled: false
   deployment:
-    # Image
     image:
       pullPolicy: Always
       repository: quay.io/fiware/dsba-pdp
-      # includes the http policy support
       tag: 1.2.0
-    # Log level
     logLevel: TRACE
-    # iSHARE config
     ishare:
       existingSecret: keyrock-ar-sec
       clientId: EU.EORI.PACKETDELIVERY
@@ -1088,27 +1038,26 @@ dsba-pdp:
         id: "did:key:z6MksU6tMfbaDzvaRe5oFE4eZTVTV4HJM4fmQWWGsDGQVsEr"
         delegationPath: "/ar/delegation"
         tokenPath: "/oauth2/token"
-        url: "http://keyrock-iam"
+        url: "http://keyrock-iam:5080"
       trustAnchor:
         id: "EU.EORI.FIWARESATELLITE"
         tokenPath: "/token"
         trustedListPath: "/trusted_list"
         url: "http://tir-iam"
-    # Verifier
     trustedVerifiers:
-      - http://verifier-iam/.well-known/jwks
-    # Provider DID
+      - http://verifier-iam:7070/.well-known/jwks
     providerId: "did:key:z6MksU6tMfbaDzvaRe5oFE4eZTVTV4HJM4fmQWWGsDGQVsEr"
-  # ENVs
   additionalEnvVars:
     - name: ISHARE_CERTIFICATE_PATH
       value: /iShare/cert
     - name: ISHARE_KEY_PATH
       value: /iShare/key
+  service:
+    type: LoadBalancer
+    port: 7080
 
 kong:
   nameOverride: kong-iam
-  fullnameOverride: kong-iam
   image:
     repository: quay.io/fiware/kong
     tag: "0.5.6"
@@ -1143,6 +1092,9 @@ kong:
     rbac:
       create: false
   proxy:
+    http:
+      servicePort: 8070
+      containerPort: 8070
     tls:
       enabled: false
   admin:
@@ -1158,4 +1110,41 @@ kong:
       enabled: true
       containerPort: 9102
   dblessConfig:
-    configMap: kong-iam-configmap
+    configMap: ""
+    secret: ""
+    config: |
+      _format_version: "2.1"
+      _transform: true
+
+      services:
+        - host: "orion-ld"
+          name: "orion-ld"
+          port: 1026
+          protocol: http
+
+          routes:
+            - name: orion-ld
+              paths:
+                - /orion-ld
+              strip_path: true
+
+          plugins:
+            - name: pep-plugin
+              config:
+                pathprefix: "/orion-ld"
+                authorizationendpointtype: ExtAuthz
+                authorizationendpointaddress: http://pdp-iam:7080/authz
+
+            - name: request-transformer
+              config:
+                remove:
+                  headers:
+                    - Authorization
+                    - authorization
+
+orion:
+  fullnameOverride: orion-ld
+  test:
+    enabled: false
+  mongo:
+    enabled: true

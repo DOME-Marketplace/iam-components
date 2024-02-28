@@ -1,3 +1,4 @@
+{{- if .Values.kong.dblessConfig.configMap }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,30 +8,23 @@ data:
     _format_version: "2.1"
     _transform: true
 
-    consumers:
-    - username: token-consumer
-      keyauth_credentials:
-      - tags: 
-        - token-key
-        - tir-key
-
     services:
 
-      - host: "protected-service"
-        name: "vc"
-        port: 8080
+      - host: "orion-ld"
+        name: "orion-ld"
+        port: 1026
         protocol: http
     
         routes:
-          - name: vc
+          - name: orion-ld
             paths:
-              - /vc
+              - /orion-ld
             strip_path: true
     
         plugins:
           - name: pep-plugin
             config:
-              pathprefix: "/vc"
+              pathprefix: "/orion-ld"
               authorizationendpointtype: ExtAuthz
               authorizationendpointaddress: http://pdp-iam:8080/authz
                 
@@ -40,3 +34,5 @@ data:
                 headers:
                   - Authorization
                   - authorization
+
+  {{- end }}

@@ -4,17 +4,14 @@ metadata:
   name: {{ include "keycloak.fullname" . }}-did-config
 data:
   import.sh: |-
-    export KEY=$(cat /opt/did/secret/tls.key)
+    export KEY=$(cat /opt/keys/keyfile.json)
     export KEY_ID=$(curl --location "${WALTID_CORE_ADDRESS}/v1/key/import" --header 'Content-Type: text/plain' --data "${KEY}" | jq -r '.id')
     echo The key id: ${KEY_ID}
     curl --location "${WALTID_CORE_ADDRESS}/v1/did/create" \
       --header 'Content-Type: application/json' \
       --data "{
-          \"method\": \"web\",
-          \"keyAlias\":\"${KEY_ID}\",
-          \"domain\": \"{{ .Values.vcwaltid.route.host }}\",
-          \"path\": \"did\",
-          \"x5u\": \"https://{{ .Values.vcwaltid.route.host }}/certs/tls.crt\"
+          \"method\": \"key\",
+          \"keyAlias\":\"${KEY_ID}\"
       }"
 
 ---
@@ -27,11 +24,11 @@ data:
   keyfile.json: |-
     {
       "kty": "OKP",
-      "d": "FoJjD3Q6Wh0JHt-tuN3bwGHmPSWa7p8pVe9P9cDIzWw",
+      "d": "gGqnb6ij2s-BGUpAgWVGv9odIHciuF-GuLDqyt2pLm0",
       "use": "sig",
       "crv": "Ed25519",
-      "kid": "z6MkvdQnXeKgRceAhNsZYjpQjSFcmTXshyGDvnNw7gziQhjG",
-      "x": "8FSufgpQ8VXgxnR5svvi-j8_4iXxB0TIsVVb0EiRP7s",
+      "kid": "z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g",
+      "x": "Pr7-Zath5ZMyvikX93LzsJNkl6HcAAJdgrwlBTSE6gs",
       "alg": "EdDSA"
     }
 
@@ -63,7 +60,7 @@ data:
       "displayNameHtml": "<div class=\"kc-logo-text\"><span>Keycloak DOME</span></div>",
       "enabled": true,
       "attributes": {
-        "frontendUrl": "https://{{ .Values.keycloak.route.host }}"
+        "frontendUrl": "{{ .Values.keycloak.frontendUrl }}"
       },
       "sslRequired": "none",
       "roles": {
@@ -117,6 +114,8 @@ data:
         {
           "username": "{{ $user.username }}",
           "enabled": true,
+          "firstName": "Legal",
+          "lastName": "HappyPetsEmployee",
           "email": "user@mymail.com",
           "credentials": [
             {
@@ -163,15 +162,17 @@ data:
           "standardFlowEnabled": true,
           "implicitFlowEnabled": false,
           "directAccessGrantsEnabled": false,
-          "serviceAccountsEnabled": true,
+          "serviceAccountsEnabled": false,
           "publicClient": false,
           "frontchannelLogout": false,
           "protocol": "SIOP-2",
           "attributes": {
             "client.secret.creation.time": "1675260539",
-            "expiryInMin": "5000000",
-            "vctypes_{{ $client.vc.name }}": "{{ join $comma $client.vc.types }}",
-            "{{ $client.vc.name }}_claims": "{{ join $comma $client.vc.claims }}"
+            {{- range $client.verifiableCredentials }}
+            "vctypes_{{ .name }}": "{{ join $comma .types }}",
+            "{{ .name }}_claims": "{{ join $comma .claims }}",
+            {{- end }}
+            "expiryInMin": "5000000"
           },
           "authenticationFlowBindingOverrides": {},
           "fullScopeAllowed": true,
