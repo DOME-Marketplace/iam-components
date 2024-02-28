@@ -309,7 +309,7 @@ trusted-issuers-registry:
     certificate:
   tir:
     ngsiBroker:
-      url: http://orion-ld-iam:1026/
+      url: http://orion-ld:1026/
     contextUrl: "https://registry.lab.dsba.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
     satellite:
       id: "EU.EORI.FIWARESATELLITE"
