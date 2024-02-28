@@ -60,7 +60,7 @@ data:
       "displayNameHtml": "<div class=\"kc-logo-text\"><span>Keycloak DOME</span></div>",
       "enabled": true,
       "attributes": {
-        "frontendUrl": "http://localhost:8080"
+        "frontendUrl": "{{ .Values.keycloak.frontendUrl }}"
       },
       "sslRequired": "none",
       "roles": {
@@ -168,11 +168,11 @@ data:
           "protocol": "SIOP-2",
           "attributes": {
             "client.secret.creation.time": "1675260539",
-            "expiryInMin": "5000000",
-            "vctypes_{{ $client.vc.name }}": "{{ join $comma $client.vc.types }}",
-            "vctypes_NaturalPersonCredential": "ldp_vc,jwt_vc_json",
-            "{{ $client.vc.name }}_claims": "{{ join $comma $client.vc.claims }}",
-            "NaturalPersonCredential_claims": "email,firstName,familyName,roles"
+            {{- range $client.verifiableCredentials }}
+            "vctypes_{{ .name }}": "{{ join $comma .types }}",
+            "{{ .name }}_claims": "{{ join $comma .claims }}",
+            {{- end }}
+            "expiryInMin": "5000000"
           },
           "authenticationFlowBindingOverrides": {},
           "fullScopeAllowed": true,

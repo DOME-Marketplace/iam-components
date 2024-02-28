@@ -158,10 +158,6 @@ keycloak:
   fullnameOverride: keycloak-iam
   frontendUrl: http://localhost
 
-  route:
-    enabled: false
-    certificate: {}
-
   realm:
     clients:
       - did: did:key:z6MksU6tMfbaDzvaRe5oFE4eZTVTV4HJM4fmQWWGsDGQVsEr
@@ -173,16 +169,16 @@ keycloak:
             description: User to access PacketDelivery with read access
           - name: GOLD_CUSTOMER
             description: User to access PacketDelivery with read/write access
-        vc:
-          name: PacketDeliveryService
-          types:
-            - ldp_vc
-            - jwt_vc_json
-          claims:
-            - email
-            - firstName
-            - lastName
-            - roles
+        verifiableCredentials:
+          - name: PacketDeliveryService
+            types:
+              - ldp_vc
+              - jwt_vc_json
+            claims:
+              - email
+              - firstName
+              - lastName
+              - roles
     users:
       - username: prime-user
         password: prime-user
