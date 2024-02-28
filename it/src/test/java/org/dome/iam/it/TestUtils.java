@@ -17,7 +17,7 @@ public class TestUtils {
 	public static String getFormDataAsString(Map<String, String> formData) {
 		StringBuilder formBodyBuilder = new StringBuilder();
 		for (Map.Entry<String, String> singleEntry : formData.entrySet()) {
-			if (formBodyBuilder.length() > 0) {
+			if (!formBodyBuilder.isEmpty()) {
 				formBodyBuilder.append("&");
 			}
 			formBodyBuilder.append(URLEncoder.encode(singleEntry.getKey(), StandardCharsets.UTF_8));

@@ -81,7 +81,7 @@ public class StepDefinitions {
 	}
 
 	@Given("The HappyPets issuer is ready to provide credentials.")
-	public void happyPetsIsAvailable() throws Exception {
+	public void happyPetsIsAvailable() {
 		HttpRequest wellKnownRequest = HttpRequest.newBuilder()
 				.uri(URI.create(
 						String.format("%s/.well-known/openid-credential-issuer",

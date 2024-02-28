@@ -403,6 +403,22 @@
               </resources>
             </configuration>
           </execution>
+          <execution>
+            <id>overwrite-helm-resources</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/charts</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.basedir}/charts</directory>
+                </resource>
+              </resources>
+              <overwrite>true</overwrite>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
       <!-- render the charts -->
@@ -425,9 +441,6 @@
               <skipTemplate>false</skipTemplate>
               <templateOutputDir>${project.build.directory}/k3s/</templateOutputDir>
               <templateGenerateName>true</templateGenerateName>
-              <values>
-                <yamlFile>${project.basedir}/src/test/resources/iam-values.yaml</yamlFile>
-              </values>
             </configuration>
           </execution>
         </executions>
@@ -444,6 +457,7 @@
               <goal>run</goal>
               <goal>image</goal>
               <goal>apply</goal>
+              <goal>rm</goal>
             </goals>
             <configuration>
               <failIfExists>false</failIfExists>
@@ -455,16 +469,12 @@
                 <portBinding>8080:8080</portBinding>
                 <!-- pdc kong -->
                 <portBinding>8070:8070</portBinding>
-                <!-- test access -->
-                <!-- token helper -->
-                <portBinding>8060:8060</portBinding>
                 <!-- keyrock-ar -->
                 <portBinding>5080:5080</portBinding>
                 <!-- til -->
                 <portBinding>5050:5050</portBinding>
                 <!-- ccs -->
                 <portBinding>4040:4040</portBinding>
-                <portBinding>5432:5432</portBinding>
               </portBindings>
             </configuration>
           </execution>

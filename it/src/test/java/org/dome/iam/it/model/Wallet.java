@@ -1,26 +1,25 @@
 package org.dome.iam.it.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.dome.iam.it.HappyPetsEnvironment;
+import org.dome.iam.it.PacketDeliveryEnvironment;
+import org.dome.iam.it.TestUtils;
 import org.fiware.keycloak.oidcvc.model.CredentialRequestVO;
 import org.fiware.keycloak.oidcvc.model.CredentialResponseVO;
 import org.fiware.keycloak.oidcvc.model.CredentialsOfferVO;
 import org.fiware.keycloak.oidcvc.model.FormatVO;
-import org.dome.iam.it.HappyPetsEnvironment;
-import org.dome.iam.it.PacketDeliveryEnvironment;
-import org.dome.iam.it.TestUtils;
 
 import javax.ws.rs.core.MediaType;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +47,6 @@ public class Wallet {
 	private Object credential;
 	private String accessToken;
 
-	private VPSigner vpSigner = new VPSigner(OBJECT_MAPPER);
-
 	public void getCredentialsOffer(String keycloakJwt, String connectionString) throws Exception {
 		HttpRequest offerRequest = HttpRequest.newBuilder()
 				.uri(URI.create(connectionString))
@@ -70,14 +67,6 @@ public class Wallet {
 		assertEquals(HttpStatus.SC_OK, offerResponse.statusCode(), "An offer uri should have been presented.");
 
 		credentialsOfferURI = OBJECT_MAPPER.readValue(offerResponse.body(), org.fiware.keycloak.oidcvc.model.CredentialOfferURIVO.class);
-	}
-
-	public String getSignedVerifiablePresentation() throws Exception{
-		var credentialDocument = (ObjectNode)OBJECT_MAPPER.valueToTree(credential);
-		VerifiablePresentation vp = vpSigner.createPresentationFromVC(credentialDocument);
-
-		Base64.Encoder encoder = Base64.getUrlEncoder();
-		return encoder.withoutPadding().encodeToString(OBJECT_MAPPER.writeValueAsString(vp).getBytes());
 	}
 
 	public void getIssuerOpenIdConfiguration() throws Exception {
@@ -175,7 +164,7 @@ public class Wallet {
 		AuthResponseParams authResponseParams = new AuthResponseParams();
 		String authLocationHeader = authResponseResponse.headers().firstValue("location").get();
 		List<NameValuePair> authParams = URLEncodedUtils.parse(URI.create(authLocationHeader),
-				Charset.forName("UTF-8"));
+                StandardCharsets.UTF_8);
 		authParams.forEach(p -> {
 			switch (p.getName()) {
 				case "code" -> authResponseParams.setCode(p.getValue());

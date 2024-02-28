@@ -683,10 +683,8 @@ keyrock:
     user: root
     host: mysql-iam
     password: password
-  admin:
-    user: admin
-    email: admin@fiware.org
-  host: http://ar-iam
+  existingSecret: keyrock-secret
+  host: http://keyrock-iam
   route:
     enabled: false
   ## Configuration of Authorisation Registry (AR)
@@ -1094,7 +1092,7 @@ dsba-pdp:
         id: "did:key:z6MksU6tMfbaDzvaRe5oFE4eZTVTV4HJM4fmQWWGsDGQVsEr"
         delegationPath: "/ar/delegation"
         tokenPath: "/oauth2/token"
-        url: "http://ar-iam"
+        url: "http://keyrock-iam"
       trustAnchor:
         id: "EU.EORI.FIWARESATELLITE"
         tokenPath: "/token"
@@ -1165,10 +1163,3 @@ kong:
       containerPort: 9102
   dblessConfig:
     configMap: kong-iam-configmap
-
-orion:
-  fullnameOverride: orion-ld
-  test:
-    enabled: false
-  mongo:
-    enabled: true
