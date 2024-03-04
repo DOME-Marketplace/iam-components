@@ -23,9 +23,6 @@ dependencies:
   - name: trusted-issuers-list
     version: 0.5.3
     repository: https://fiware.github.io/helm-charts
-  - name: trusted-issuers-registry
-    version: 0.0.11
-    repository: https://fiware.github.io/helm-charts
   - name: vcverifier
     version: 1.0.23
     repository: https://i4trust.github.io/helm-charts

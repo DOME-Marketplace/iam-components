@@ -17,10 +17,9 @@ The IAM-Framework consists of following components:
 
 ![IAM-components](./doc/arch.png)
 
-### [Trusted Issuers List](https://github.com/fiware/trusted-issuers-registry)
+### [Trusted Issuers List](https://github.com/fiware/trusted-issuers-list)
 
-The Trusted-Issuers-List (or Trusted-Issuers-Registry) service provides an
-[EBSI Trusted Issuers Registry](https://hub.ebsi.eu/apis/pilot/trusted-issuers-registry/v4) implementation to act as
+The Trusted-Issuers-List service provides an [EBSI Trusted Issuers Registry](https://hub.ebsi.eu/apis/pilot/trusted-issuers-registry/v4) implementation to act as
 the Trusted-List-Service in the DSBA Trust and IAM Framework. In addition, a Trusted-Issuers-List API is provided to
 manage the issuers.
 
