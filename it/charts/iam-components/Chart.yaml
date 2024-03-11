@@ -2,7 +2,7 @@ apiVersion: v2
 name: iam-components
 description: Umbrella Chart for the DOME Marketplace iam-components
 type: application
-version: 0.1.0-PRE-5
+version: 0.0.1-PRE-4
 appVersion: 0.0.1
 dependencies:
   - name: postgresql
@@ -23,6 +23,9 @@ dependencies:
   - name: trusted-issuers-list
     version: 0.5.3
     repository: https://fiware.github.io/helm-charts
+  - name: trusted-issuers-registry
+    version: 0.0.11
+    repository: https://fiware.github.io/helm-charts
   - name: vcverifier
     version: 1.0.23
     repository: https://i4trust.github.io/helm-charts
@@ -35,3 +38,6 @@ dependencies:
   - name: kong
     version: 2.10.0
     repository: https://charts.konghq.com
+  - name: orion
+    version: 1.2.6
+    repository: https://fiware.github.io/helm-charts
