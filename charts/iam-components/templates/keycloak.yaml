@@ -10,7 +10,7 @@ data:
     curl --location "${WALTID_CORE_ADDRESS}/v1/did/create" \
       --header 'Content-Type: application/json' \
       --data "{
-          \"method\": \"key\",
+          \"method\": \"{{ index (regexSplit ":" .Values.keycloak.issuerDid -1) 1 }}\",
           \"keyAlias\":\"${KEY_ID}\"
       }"
 

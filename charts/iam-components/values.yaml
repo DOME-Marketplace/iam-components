@@ -157,6 +157,7 @@ vcwaltid:
 keycloak:
   fullnameOverride: keycloak-iam
   frontendUrl: http://localhost
+  issuerDid: did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g
 
   realm:
     clients:
