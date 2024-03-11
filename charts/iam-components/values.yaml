@@ -346,7 +346,7 @@ vcverifier:
       auditorUrl: http://waltid-iam:7003
     # Verifier config
     verifier:
-      tirAddress: https://tir-iam/v4/issuers
+      tirAddress: https://tir.com/v4/issuers
       did: did:key:z6MksU6tMfbaDzvaRe5oFE4eZTVTV4HJM4fmQWWGsDGQVsEr
     # Config service
     configRepo:
@@ -385,11 +385,11 @@ keyrock:
     # -- Identifier (EORI) of satellite
     identifier: "EU.EORI.FIWARESATELLITE"
     # -- URL of satellite
-    url: "http://tir-iam"
+    url: "https://tir.com"
     # -- Token endpoint of satellite
-    tokenEndpoint: "http://tir-iam/token"
+    tokenEndpoint: "https://tir.com/token"
     # -- Parties endpoint of satellite
-    partiesEndpoint: "http://tir-iam/parties"
+    partiesEndpoint: "https://tir.com/parties"
   additionalEnvVars:
     - name: IDM_TITLE
       value: "DOME IAM AR"
@@ -780,7 +780,7 @@ dsba-pdp:
         id: "EU.EORI.FIWARESATELLITE"
         tokenPath: "/token"
         trustedListPath: "/trusted_list"
-        url: "http://tir-iam"
+        url: "https://tir.com"
     # Verifier
     trustedVerifiers:
       - http://verifier-iam/.well-known/jwks

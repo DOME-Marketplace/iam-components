@@ -82,9 +82,10 @@ It provides a sane set of default-values. To actually use the IAM-components the
 account
 * `ingress` or `route`: You need to set up these settings to make a component externally accessible
 * `did`s of participants: Replace/add the DIDs of the issuer and other participants
+* Provide correct key in [keyfile.json](./charts/iam-components/templates/keycloak.yaml) for your issuer 
 * `keycloak.frontendUrl`: Externally accessible address of the keycloak (should be the same as defined in ingress/route)
 * `keycloak.realm`: Adapt clients, users and roles according to your needs
-* `trusted-issuers-registry.tir.satellite`: replace/add these settings for the satellite
+* `tir.com`: replace everywhere with actual TIR
 * `keyrock.initData.scriptData`: Adapt the roles as in keycloak realm
 * `kong.configMap`: Adapt the kong services and their routes
 
