@@ -168,12 +168,12 @@ jobs:
             git switch gh-pages
             
             echo "before"
-            ls
+            cat index.yaml 
             
             cr index -o "$owner" -r "$repo"
             
             echo "after"
-            ls
+            cat index.yaml
             
             mv .cr-index/index.yaml pre/index.yaml
 
