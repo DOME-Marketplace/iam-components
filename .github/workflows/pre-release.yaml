@@ -167,7 +167,7 @@ jobs:
 
             git switch gh-pages
             
-            cr index -o "$owner" -r "$repo"
+            cr index -o "$owner" -r "$repo" -i ".cr-index/index.yaml"
 
             mv .cr-index/index.yaml pre/index.yaml
 
