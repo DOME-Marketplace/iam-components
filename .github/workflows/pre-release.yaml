@@ -169,7 +169,7 @@ jobs:
             
             cr index -o "$owner" -r "$repo"
             
-            mv index.yaml pre/index.yaml
+            mv .cr-index/index.yaml pre/index.yaml
 
             git add pre/index.yaml
             git commit -m "add pre-index"
