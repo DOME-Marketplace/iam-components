@@ -410,10 +410,10 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${project.build.directory}/charts</outputDirectory>
+              <outputDirectory>${project.build.directory}/charts/iam-components</outputDirectory>
               <resources>
                 <resource>
-                  <directory>${project.basedir}/charts</directory>
+                  <directory>${project.basedir}/charts/test-iam</directory>
                 </resource>
               </resources>
               <overwrite>true</overwrite>
