@@ -1,0 +1,305 @@
+apiVersion: v1
+entries:
+  ccs:
+  - apiVersion: v2
+    appVersion: 0.0.4
+    created: "2024-02-13T08:29:48.160400143Z"
+    dependencies:
+    - name: credentials-config-service
+      repository: https://fiware.github.io/helm-charts
+      version: 0.0.4
+    description: ccs chart
+    digest: dd92b33619b03de36d2216e8ce8bd0739842c89761abc861ff2e2f0222145724
+    name: ccs
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/ccs-0.0.1/ccs-0.0.1.tgz
+    version: 0.0.1
+  dsba-pdp:
+  - apiVersion: v2
+    appVersion: 0.0.17
+    created: "2024-02-13T08:29:48.279540493Z"
+    dependencies:
+    - name: dsba-pdp
+      repository: https://fiware.github.io/helm-charts
+      version: 0.0.17
+    description: dsba-pdp chart
+    digest: 051703d84f9d570b563afba136c5e7fa7153e8d4db9d25fecaa7f7214e9a69d0
+    name: dsba-pdp
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/dsba-pdp-0.0.1/dsba-pdp-0.0.1.tgz
+    version: 0.0.1
+  iam-components:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2024-03-11T19:47:54.620596414Z"
+    dependencies:
+    - name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.13
+    - name: mysql
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.4.4
+    - name: vcwaltid
+      repository: https://i4trust.github.io/helm-charts
+      version: 0.0.18
+    - name: keycloak
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.0.3
+    - name: credentials-config-service
+      repository: https://fiware.github.io/helm-charts
+      version: 0.0.4
+    - name: trusted-issuers-list
+      repository: https://fiware.github.io/helm-charts
+      version: 0.5.3
+    - name: vcverifier
+      repository: https://i4trust.github.io/helm-charts
+      version: 1.0.23
+    - name: keyrock
+      repository: https://fiware.github.io/helm-charts
+      version: 0.7.5
+    - name: dsba-pdp
+      repository: https://fiware.github.io/helm-charts
+      version: 0.0.17
+    - name: kong
+      repository: https://charts.konghq.com
+      version: 2.10.0
+    description: Umbrella Chart for the DOME Marketplace iam-components
+    digest: 5c3533acd54c37962ba48c2e62e0755c287c4504303f8cfb7ff35e4f4d29b6ed
+    name: iam-components
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/iam-components-0.1.0-PRE-5/iam-components-0.1.0-PRE-5.tgz
+    version: 0.1.0-PRE-5
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2024-03-11T20:06:17.88582094Z"
+    dependencies:
+    - name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.13
+    - name: mysql
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.4.4
+    - name: vcwaltid
+      repository: https://i4trust.github.io/helm-charts
+      version: 0.0.18
+    - name: keycloak
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.0.3
+    - name: credentials-config-service
+      repository: https://fiware.github.io/helm-charts
+      version: 0.0.4
+    - name: trusted-issuers-list
+      repository: https://fiware.github.io/helm-charts
+      version: 0.5.3
+    - name: vcverifier
+      repository: https://i4trust.github.io/helm-charts
+      version: 1.0.23
+    - name: keyrock
+      repository: https://fiware.github.io/helm-charts
+      version: 0.7.5
+    - name: dsba-pdp
+      repository: https://fiware.github.io/helm-charts
+      version: 0.0.17
+    - name: kong
+      repository: https://charts.konghq.com
+      version: 2.10.0
+    description: Umbrella Chart for the DOME Marketplace iam-components
+    digest: 2050dfa7e76451848646eaab5d412b572ffac23227157ee453ea2bc3853de4a7
+    name: iam-components
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/iam-components-0.1.0-PRE-5/iam-components-0.1.0-PRE-5.tgz
+    version: 0.1.0-PRE-5
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2024-03-11T20:19:20.233294785Z"
+    dependencies:
+    - name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.13
+    - name: mysql
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.4.4
+    - name: vcwaltid
+      repository: https://i4trust.github.io/helm-charts
+      version: 0.0.18
+    - name: keycloak
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.0.3
+    - name: credentials-config-service
+      repository: https://fiware.github.io/helm-charts
+      version: 0.0.4
+    - name: trusted-issuers-list
+      repository: https://fiware.github.io/helm-charts
+      version: 0.5.3
+    - name: vcverifier
+      repository: https://i4trust.github.io/helm-charts
+      version: 1.0.23
+    - name: keyrock
+      repository: https://fiware.github.io/helm-charts
+      version: 0.7.5
+    - name: dsba-pdp
+      repository: https://fiware.github.io/helm-charts
+      version: 0.0.17
+    - name: kong
+      repository: https://charts.konghq.com
+      version: 2.10.0
+    description: Umbrella Chart for the DOME Marketplace iam-components
+    digest: 5b8a4197444d5fc4b4066f576cfc1c7825de61a70f6263f1370e868ecf923882
+    name: iam-components
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/iam-components-0.1.0-PRE-5/iam-components-0.1.0-PRE-5.tgz
+    version: 0.1.0-PRE-5
+  - apiVersion: v2
+    appVersion: 0.0.2
+    created: "2024-03-12T08:29:47.542491805Z"
+    dependencies:
+    - name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.13
+    - name: mysql
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.4.4
+    - name: vcwaltid
+      repository: https://i4trust.github.io/helm-charts
+      version: 0.0.18
+    - name: keycloak
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.0.3
+    - name: credentials-config-service
+      repository: https://fiware.github.io/helm-charts
+      version: 0.0.4
+    - name: trusted-issuers-list
+      repository: https://fiware.github.io/helm-charts
+      version: 0.5.3
+    - name: vcverifier
+      repository: https://i4trust.github.io/helm-charts
+      version: 1.0.23
+    - name: keyrock
+      repository: https://fiware.github.io/helm-charts
+      version: 0.7.5
+    - name: dsba-pdp
+      repository: https://fiware.github.io/helm-charts
+      version: 0.0.17
+    - name: kong
+      repository: https://charts.konghq.com
+      version: 2.10.0
+    description: Umbrella Chart for the DOME Marketplace iam-components
+    digest: 6585eb22bc2906b2227852ced9c7a82850ceab16165dbad2f55a9017e09d71e4
+    name: iam-components
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/iam-components-0.1.0-PRE-5/iam-components-0.1.0-PRE-5.tgz
+    version: 0.1.0-PRE-5
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2024-02-13T08:29:48.424016126Z"
+    dependencies:
+    - name: postgresql
+      repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+      version: 12.1.13
+    - name: mysql
+      repository: https://raw.githubusercontent.com/bitnami/charts/archive-full-index/bitnami
+      version: 9.4.4
+    description: Umbrella Chart for the DOME Marketplace iam-components
+    digest: 43d2c839c01a559304d8541e9dadd1d241b4b595d5aea49beea3dcc0ee538d6b
+    name: iam-components
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/iam-components-0.0.1/iam-components-0.0.1.tgz
+    version: 0.0.1
+  keycloak:
+  - apiVersion: v2
+    appVersion: 13.0.3
+    created: "2024-02-13T08:29:48.553301533Z"
+    dependencies:
+    - name: keycloak
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.0.3
+    description: A Helm chart for Kubernetes to deploy Keycloak
+    digest: 98921818f4f70eb73450362a1c9939432c2c22ccc986aa7ee809a332759576cb
+    name: keycloak
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/keycloak-0.0.1/keycloak-0.0.1.tgz
+    version: 0.0.1
+  keyrock:
+  - apiVersion: v2
+    appVersion: 0.5.1
+    created: "2024-02-13T08:29:48.685277046Z"
+    dependencies:
+    - name: keyrock
+      repository: https://fiware.github.io/helm-charts
+      version: 0.5.1
+    description: keyrock chart
+    digest: d562325c569ff10f98a180f323529bb480f3a5b6a86d599aa859b84a34b6184c
+    name: keyrock
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/keyrock-0.0.1/keyrock-0.0.1.tgz
+    version: 0.0.1
+  kong:
+  - apiVersion: v2
+    appVersion: 2.8.0
+    created: "2024-02-13T08:29:48.801137711Z"
+    dependencies:
+    - name: kong
+      repository: https://charts.konghq.com
+      version: 2.8.0
+    description: kong chart
+    digest: 1ff33495cc8f86881bea44a1bb49fb260fd55676117055b59cd2cc0e991f458b
+    name: kong
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/kong-0.0.1/kong-0.0.1.tgz
+    version: 0.0.1
+  til:
+  - apiVersion: v2
+    appVersion: 0.5.3
+    created: "2024-02-13T08:29:48.97653372Z"
+    dependencies:
+    - name: trusted-issuers-list
+      repository: https://fiware.github.io/helm-charts
+      version: 0.5.3
+    description: til chart
+    digest: 928694506ecf65b7425e9edd2172a692f4279a0f63b696af4448080dd0ea8f76
+    name: til
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/til-0.0.1/til-0.0.1.tgz
+    version: 0.0.1
+  vcverifier:
+  - apiVersion: v2
+    appVersion: 1.0.23
+    created: "2024-02-13T08:29:49.088732453Z"
+    dependencies:
+    - name: vcverifier
+      repository: https://i4Trust.github.io/helm-charts
+      version: 1.0.23
+    description: vcverifier chart
+    digest: 5c8ff7313a5e3939b5df91c3428dea29705dec1d57593da474b5c890a50fdacc
+    name: vcverifier
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/vcverifier-0.0.1/vcverifier-0.0.1.tgz
+    version: 0.0.1
+  vcwaltid:
+  - apiVersion: v2
+    appVersion: 0.0.18
+    created: "2024-02-13T08:04:43.352684226Z"
+    dependencies:
+    - name: vcwaltid
+      repository: https://i4Trust.github.io/helm-charts
+      version: 0.0.18
+    description: walt-id chart
+    digest: 6c5373d42657e9a84bb38f19c4ba612b63378f5f7a4fb2b75012833495d62fa4
+    name: vcwaltid
+    type: application
+    urls:
+    - https://github.com/DOME-Marketplace/iam-components/releases/download/vcwaltid-0.0.1/vcwaltid-0.0.1.tgz
+    version: 0.0.1
+generated: "2024-03-12T08:29:47.542519397Z"
