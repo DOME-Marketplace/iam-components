@@ -169,6 +169,8 @@ jobs:
             
             cr index -o "$owner" -r "$repo"
             
+            mkdir -p pre
+            
             mv .cr-index/index.yaml pre/index.yaml
 
             git add pre/index.yaml
