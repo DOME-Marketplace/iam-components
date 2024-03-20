@@ -34,15 +34,14 @@ mysql:
   initdbScripts: {}
 
 vcwaltid:
-  route:
+  ingress:
     enabled: false
-    certificate: {}
 
   fullnameOverride: waltid-iam
   deployment:
     image:
-      repository: waltid/ssikit
-      tag: 1.2311262046.fix-didwebpath
+      repository: quay.io/fiware/waltid
+      tag: 1.14.1-SNAPSHOT
       pullPolicy: Always
   api:
     core:
@@ -183,6 +182,8 @@ keycloak:
     create: false
   rbac:
     create: false
+  ingress:
+    enabled: false
   keycloakConfigCli:
     enabled: true
     # current image does not contain 20.0.3., thus we need this fix
