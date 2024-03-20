@@ -3,6 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ include "keycloak.fullname" . }}-did-config
 data:
+  {{ if eq (index (regexSplit ":" .Values.keycloak.issuerDid -1) 1) "key" }}
   import.sh: |-
     export KEY=$(cat /opt/keys/keyfile.json)
     export KEY_ID=$(curl --location "${WALTID_CORE_ADDRESS}/v1/key/import" --header 'Content-Type: text/plain' --data "${KEY}" | jq -r '.id')
@@ -10,9 +11,23 @@ data:
     curl --location "${WALTID_CORE_ADDRESS}/v1/did/create" \
       --header 'Content-Type: application/json' \
       --data "{
-          \"method\": \"{{ index (regexSplit ":" .Values.keycloak.issuerDid -1) 1 }}\",
+          \"method\": \"key\",
           \"keyAlias\":\"${KEY_ID}\"
       }"
+  {{ else }}
+  import.sh: |-
+    export KEY=$(cat /opt/did/secret/tls.key)
+    export KEY_ID=$(curl --location "${WALTID_CORE_ADDRESS}/v1/key/import" --header 'Content-Type: text/plain' --data "${KEY}" | jq -r '.id')
+    echo The key id: ${KEY_ID}
+
+    curl -v --location "${WALTID_CORE_ADDRESS}/v1/did/create" \
+      --header 'Content-Type: application/json' \
+      --data "{
+          \"method\": \"web\",
+          \"keyAlias\":\"${KEY_ID}\",
+          \"domain\": \"{{ .Values.vcwaltid.ingress.host }}\",
+          \"x5u\": \"https://{{ .Values.vcwaltid.ingress.host }}/certs/tls.crt\"}"
+  {{ end }}
 
 ---
 
