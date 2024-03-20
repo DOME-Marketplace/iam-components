@@ -44,10 +44,16 @@ mysql:
 
 ## configuration of waltid to be used for keycloak and verifier - see https://github.com/dome-marketplace/iam-components/tree/main/charts/walt-id for details
 vcwaltid:
-  ## route configuration
-  route:
-    enabled: false
-    certificate: {}
+  did: did:key:z6MkigCEnopwujz8Ten2dzq91nvMjqbKQYcifuZhqBsEkH7g
+  ## ingress configuration
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-aws-prod
+    class: nginx
+    host: onboarding.dome-marketplace.org
+    tls:
+      enabled: true
 
   fullnameOverride: waltid-iam
   ## deployment specific configuration
@@ -55,9 +61,9 @@ vcwaltid:
     ## deployment image
     image:
       # -- deployment image repository
-      repository: waltid/ssikit
+      repository: quay.io/fiware/waltid
       # -- deployment image tag
-      tag: 1.2311262046.fix-didwebpath
+      tag: 1.14.1-SNAPSHOT
       # -- deployment image pull policy
       pullPolicy: Always
   api:
@@ -201,7 +207,13 @@ keycloak:
     create: false
   rbac:
     create: false
-
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostname: keycloak.dome-marketplace.org
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-aws-prod
+    tls: true
   keycloakConfigCli:
     enabled: true
     # current image does not contain 20.0.3., thus we need this fix
@@ -252,6 +264,9 @@ keycloak:
     - name: did-config
       configMap:
         name: keycloak-iam-did-config
+    - name: did-secret
+      secret:
+        secretName: waltid-iam-tls-sec
 
   initContainers:
     - name: add-vc-issuer
@@ -274,6 +289,8 @@ keycloak:
           mountPath: /opt/did/script
         - name: issuer-key
           mountPath: /opt/keys
+        - name: did-secret
+          mountPath: /opt/did/secret
 
   postgresql:
     enabled: false
@@ -354,6 +371,19 @@ vcverifier:
   route:
     enabled: false
     certificate: {}
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-aws-prod
+    className: nginx
+    hosts:
+      - host: verifier.dome-marketplace.org
+        paths:
+          - "/"
+    tls:
+      - hosts:
+          - verifier.dome-marketplace.org
+        secretName: waltid-iam-tls-sec
 
 keyrock:
   fullnameOverride: keyrock-iam
@@ -830,8 +860,17 @@ kong:
     rbac:
       create: false
   proxy:
+    type: ClusterIP
+    enabled: true
     tls:
       enabled: false
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-aws-prod
+      hostname: kong.dome-marketplace.org
+      tls: waltid-iam-tls-sec
   admin:
     enabled: true
     type: ClusterIP
