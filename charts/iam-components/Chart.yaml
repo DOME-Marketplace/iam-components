@@ -3,7 +3,7 @@ name: iam-components
 description: Umbrella Chart for the DOME Marketplace iam-components
 type: application
 version: 0.1.0-PRE-5
-appVersion: 0.0.1
+appVersion: 0.0.2
 dependencies:
   - name: postgresql
     version: 12.1.13
