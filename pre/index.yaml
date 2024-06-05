@@ -214,7 +214,7 @@ entries:
     version: 0.0.1
   - apiVersion: v2
     appVersion: 0.0.2
-    created: "2024-06-05T06:11:02.06188353Z"
+    created: "2024-06-05T06:11:32.209934896Z"
     dependencies:
     - name: postgresql
       repository: https://charts.bitnami.com/bitnami
@@ -253,7 +253,7 @@ entries:
       repository: https://fiware.github.io/helm-charts
       version: 1.2.6
     description: Umbrella Chart for the DOME Marketplace iam-components
-    digest: e0e73010034fd9466b340e69b1f28ba2c7db24e77c452c4bb405386289116b4f
+    digest: a2a73264be30ba60dec488ea426b75f7fad00c5df58412da11bf4cd9ef91dc62
     name: iam-components
     type: application
     urls:
@@ -349,4 +349,4 @@ entries:
     urls:
     - https://github.com/DOME-Marketplace/iam-components/releases/download/vcwaltid-0.0.1/vcwaltid-0.0.1.tgz
     version: 0.0.1
-generated: "2024-06-05T06:11:02.061906513Z"
+generated: "2024-06-05T06:11:32.209962067Z"
